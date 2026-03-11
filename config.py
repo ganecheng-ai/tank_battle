@@ -1,0 +1,62 @@
+"""
+坦克大战游戏配置模块
+"""
+
+# 游戏基本配置
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+FPS = 60
+TITLE = "坦克大战"
+
+# 游戏语言
+LANGUAGE = "zh_CN"
+
+# 游戏关卡配置
+TOTAL_LEVELS = 10
+INITIAL_LIVES = 3
+
+# 坦克配置
+TANK_SPEED = 3  # 像素/帧
+TANK_SIZE = 48  # 坦克尺寸（像素）
+TANK_ROTATION_SPEED = 90  # 旋转角度
+
+# 子弹配置
+BULLET_SPEED = 8
+BULLET_SIZE = 8
+BULLET_DAMAGE = 1
+
+# 颜色配置
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+GRAY = (128, 128, 128)
+BROWN = (139, 69, 19)
+STEEL_COLOR = (192, 192, 192)
+WATER_COLOR = (0, 105, 148)
+GRASS_COLOR = (34, 139, 34)
+
+# 地形配置
+TILE_SIZE = 48  # 每个格子的大小
+GRID_WIDTH = SCREEN_WIDTH // TILE_SIZE  # 26
+GRID_HEIGHT = SCREEN_HEIGHT // TILE_SIZE  # 15
+
+# 方向配置
+DIRECTION_UP = 0
+DIRECTION_RIGHT = 1
+DIRECTION_DOWN = 2
+DIRECTION_LEFT = 3
+
+# 游戏状态
+STATE_MENU = "menu"
+STATE_PLAYING = "playing"
+STATE_PAUSED = "paused"
+STATE_GAME_OVER = "game_over"
+STATE_LEVEL_COMPLETE = "level_complete"
+STATE_VICTORY = "victory"
+
+# 字体配置
+FONT_SIZE_LARGE = 48
+FONT_SIZE_MEDIUM = 32
+FONT_SIZE_SMALL = 24
