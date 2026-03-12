@@ -51,11 +51,18 @@ jobs:
         run: |
           pyinstaller --onefile --name "TankBattle" --console main.py
 
+      - name: Create ZIP archive
+        run: |
+          Compress-Archive -Path dist/TankBattle.exe -DestinationPath TankBattle-Windows-x86_64.zip
+        shell: pwsh
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TankBattle-Windows-x86_64
-          path: dist/TankBattle.exe
+          path: |
+            TankBattle-Windows-x86_64.zip
+            dist/TankBattle.exe
 
   build-linux:
     needs: test
@@ -76,13 +83,19 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --name "TankBattle-Linux" --console main.py
+          pyinstaller --onefile --name "TankBattle" --console main.py
+
+      - name: Create tar.gz archive
+        run: |
+          tar -czvf TankBattle-Linux-x86_64.tar.gz -C dist TankBattle
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TankBattle-Linux-x86_64
-          path: dist/TankBattle-Linux
+          path: |
+            TankBattle-Linux-x86_64.tar.gz
+            dist/TankBattle
 
   build-macos:
     needs: test
@@ -103,13 +116,19 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --name "TankBattle-macOS" --console main.py
+          pyinstaller --onefile --name "TankBattle" --console main.py
+
+      - name: Create tar.gz archive
+        run: |
+          tar -czvf TankBattle-macOS-x86_64.tar.gz -C dist TankBattle
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TankBattle-macOS-x86_64
-          path: dist/TankBattle-macOS
+          path: |
+            TankBattle-macOS-x86_64.tar.gz
+            dist/TankBattle
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -136,21 +155,28 @@ jobs:
           name: TankBattle-macOS-x86_64
           path: ./release
 
+      - name: Organize release files
+        run: |
+          mkdir -p ./release/final
+          mv ./release/TankBattle-Windows-x86_64.zip ./release/final/
+          mv ./release/TankBattle-Linux-x86_64.tar.gz ./release/final/
+          mv ./release/TankBattle-macOS-x86_64.tar.gz ./release/final/
+
       - name: Generate checksums
         run: |
-          cd ./release
-          sha256sum TankBattle.exe > checksums.txt
-          sha256sum TankBattle-Linux >> checksums.txt
-          sha256sum TankBattle-macOS >> checksums.txt
+          cd ./release/final
+          sha256sum TankBattle-Windows-x86_64.zip > checksums.txt
+          sha256sum TankBattle-Linux-x86_64.tar.gz >> checksums.txt
+          sha256sum TankBattle-macOS-x86_64.tar.gz >> checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./release/TankBattle.exe
-            ./release/TankBattle-Linux
-            ./release/TankBattle-macOS
-            ./release/checksums.txt
+            ./release/final/TankBattle-Windows-x86_64.zip
+            ./release/final/TankBattle-Linux-x86_64.tar.gz
+            ./release/final/TankBattle-macOS-x86_64.tar.gz
+            ./release/final/checksums.txt
           generate_release_notes: true
           draft: false
           prerelease: false
