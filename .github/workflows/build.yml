@@ -136,6 +136,13 @@ jobs:
           name: TankBattle-macOS-x86_64
           path: ./release
 
+      - name: Generate checksums
+        run: |
+          cd ./release
+          sha256sum TankBattle.exe > checksums.txt
+          sha256sum TankBattle-Linux >> checksums.txt
+          sha256sum TankBattle-macOS >> checksums.txt
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -143,6 +150,7 @@ jobs:
             ./release/TankBattle.exe
             ./release/TankBattle-Linux
             ./release/TankBattle-macOS
+            ./release/checksums.txt
           generate_release_notes: true
           draft: false
           prerelease: false
