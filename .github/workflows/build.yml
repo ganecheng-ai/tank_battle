@@ -54,7 +54,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tank-battle-windows
+          name: TankBattle-Windows-x86_64
           path: dist/TankBattle.exe
 
   build-linux:
@@ -81,7 +81,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tank-battle-linux
+          name: TankBattle-Linux-x86_64
           path: dist/TankBattle
 
   build-macos:
@@ -108,7 +108,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tank-battle-macos
+          name: TankBattle-macOS-x86_64
           path: dist/TankBattle
 
   release:
@@ -121,19 +121,19 @@ jobs:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: tank-battle-windows
+          name: TankBattle-Windows-x86_64
           path: ./release
 
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
-          name: tank-battle-linux
+          name: TankBattle-Linux-x86_64
           path: ./release
 
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: tank-battle-macos
+          name: TankBattle-macOS-x86_64
           path: ./release
 
       - name: Create Release
@@ -141,8 +141,8 @@ jobs:
         with:
           files: |
             ./release/TankBattle.exe
-            ./release/TankBattle
-            ./release/TankBattle
+            ./release/TankBattle-Linux-x86_64
+            ./release/TankBattle-macOS-x86_64
           generate_release_notes: true
           draft: false
           prerelease: false
