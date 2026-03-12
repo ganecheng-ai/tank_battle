@@ -50,7 +50,7 @@ jobs:
       - name: Download Chinese font
         run: |
           # 下载思源黑体用于 Windows 打包
-          $fontUrl = "https://github.com/google/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+          $fontUrl = "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
           $fontPath = "assets\fonts\SourceHanSansSC-Regular.otf"
           if (!(Test-Path "assets\fonts")) {
             New-Item -ItemType Directory -Force -Path "assets\fonts"
@@ -96,9 +96,9 @@ jobs:
         run: |
           mkdir -p assets/fonts
           wget -O assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/google/noto-cjk/raw/main/SourceHanSansSC-Regular.otf" || \
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf" || \
           curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/google/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
 
       - name: Build executable with spec file
         run: |
@@ -137,7 +137,7 @@ jobs:
         run: |
           mkdir -p assets/fonts
           curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/google/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
 
       - name: Build executable with spec file
         run: |
