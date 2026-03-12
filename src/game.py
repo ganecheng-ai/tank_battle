@@ -14,7 +14,7 @@ from src.tank import PlayerTank, EnemyTank
 from src.bullet import Bullet
 from src.terrain import TERRAIN_BASE
 from src.collision import CollisionDetector
-from src.level import LevelManager
+from src.level import LevelManager, LEVEL_MAPS
 from src.ui import UI, Explosion
 
 
@@ -388,7 +388,7 @@ class Game:
 
         # 检查关卡是否完成
         if self.level_manager.enemies_remaining <= 0 and len(self.enemies) == 0:
-            if self.current_level >= len(LEVEL_MAPS):
+            if self.current_level == len(LEVEL_MAPS):
                 self.state = STATE_VICTORY
             else:
                 self.state = STATE_LEVEL_COMPLETE
@@ -457,7 +457,3 @@ class Game:
 
         pygame.quit()
         sys.exit()
-
-
-# 导入关卡地图用于检查通关
-from src.level import LEVEL_MAPS
