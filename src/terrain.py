@@ -4,6 +4,7 @@
 """
 
 import pygame
+import math
 from config import (
     TILE_SIZE,
     BLACK, BROWN, STEEL_COLOR, WATER_COLOR, GRASS_COLOR, BLUE
@@ -72,90 +73,204 @@ class Terrain(Entity):
             self._draw_base(screen)
 
     def _draw_brick(self, screen):
-        """绘制砖块"""
+        """绘制砖块 - 精美纹理"""
         rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, BROWN, rect)
 
-        # 绘制砖块纹理
-        brick_color = (160, 82, 45)
-        for i in range(2):
-            for j in range(4):
-                bx = self.x + j * 12
-                by = self.y + i * 24
-                brick_rect = pygame.Rect(bx + 1, by + 1, 10, 22)
-                pygame.draw.rect(screen, brick_color, brick_rect)
+        # 砖块背景
+        pygame.draw.rect(screen, (140, 80, 50), rect)
 
-        # 边框
-        pygame.draw.rect(screen, (100, 50, 30), rect, 2)
+        # 绘制砖块纹理（交错排列）
+        brick_rows = 4
+        brick_cols = 2
+        brick_height = self.height // brick_rows
+        brick_width = self.width // brick_cols
+
+        for row in range(brick_rows):
+            offset = (row % 2) * (brick_width // 2)
+            for col in range(brick_cols + 1):
+                bx = self.x + col * brick_width - offset
+                by = self.y + row * brick_height
+
+                # 砖块主体
+                brick_rect = pygame.Rect(bx + 2, by + 2, brick_width - 4, brick_height - 4)
+                pygame.draw.rect(screen, (160, 82, 45), brick_rect)
+
+                # 砖块高光
+                highlight_rect = pygame.Rect(bx + 4, by + 4, brick_width - 8, brick_height // 3)
+                pygame.draw.rect(screen, (180, 100, 60), highlight_rect)
+
+                # 砖块阴影
+                shadow_rect = pygame.Rect(bx + 4, by + brick_height - 8, brick_width - 8, 4)
+                pygame.draw.rect(screen, (100, 50, 25), shadow_rect)
+
+        # 外边框
+        pygame.draw.rect(screen, (80, 40, 20), rect, 3)
 
     def _draw_steel(self, screen):
-        """绘制钢板"""
+        """绘制钢板 - 金属质感"""
         rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, STEEL_COLOR, rect)
 
-        # 绘制钢板纹理
-        inner_rect = pygame.Rect(self.x + 4, self.y + 4, self.width - 8, self.height - 8)
-        pygame.draw.rect(screen, (220, 220, 220), inner_rect)
+        # 钢板底色
+        pygame.draw.rect(screen, (160, 160, 160), rect)
 
-        # 边框
-        pygame.draw.rect(screen, (150, 150, 150), rect, 3)
+        # 金属渐变效果
+        for i in range(0, self.width, 4):
+            brightness = 180 + int(40 * abs(i / self.width - 0.5) * 2)
+            pygame.draw.rect(screen, (brightness, brightness, brightness),
+                           (self.x + i, self.y, 2, self.height))
+
+        # 铆钉效果（四个角）
+        rivet_positions = [
+            (self.x + 6, self.y + 6),
+            (self.x + self.width - 6, self.y + 6),
+            (self.x + 6, self.y + self.height - 6),
+            (self.x + self.width - 6, self.y + self.height - 6)
+        ]
+        for rx, ry in rivet_positions:
+            # 铆钉外圈
+            pygame.draw.circle(screen, (120, 120, 120), (int(rx), int(ry)), 6)
+            # 铆钉内圈（高光）
+            pygame.draw.circle(screen, (200, 200, 200), (int(rx - 1), int(ry - 1)), 3)
+
+        # 中心装饰
+        center_x, center_y = self.x + self.width // 2, self.y + self.height // 2
+        pygame.draw.circle(screen, (140, 140, 140), (int(center_x), int(center_y)), 8)
+
+        # 外边框
+        pygame.draw.rect(screen, (100, 100, 100), rect, 3)
 
     def _draw_water(self, screen):
-        """绘制水域"""
+        """绘制水域 - 动态波浪"""
         rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, WATER_COLOR, rect)
 
-        # 绘制水波效果
-        wave_offset = pygame.time.get_ticks() // 200 % 10
+        # 水底色
+        pygame.draw.rect(screen, (30, 100, 150), rect)
+
+        # 动态波浪效果
+        time_offset = pygame.time.get_ticks() / 500
+        wave_count = 4
+
+        for i in range(wave_count):
+            wave_y = self.y + (i + 1) * (self.height / (wave_count + 1))
+
+            # 波浪点
+            points = []
+            for px in range(0, self.width + 10, 10):
+                offset = math.sin((px / 20) + time_offset + i) * 3
+                points.append((self.x + px, wave_y + offset))
+
+            if len(points) > 1:
+                pygame.draw.lines(screen, (80, 180, 255), False, points, 2)
+
+        # 水面高光
         for i in range(3):
-            wave_y = self.y + 10 + i * 15 + wave_offset % 5
-            pygame.draw.line(screen, (100, 200, 255),
-                           (self.x + 5, wave_y),
-                           (self.x + self.width - 5, wave_y), 2)
+            highlight_x = self.x + 10 + i * 15
+            highlight_y = self.y + 10 + i * 5
+            pygame.draw.line(screen, (150, 220, 255),
+                           (highlight_x, highlight_y),
+                           (highlight_x + 10, highlight_y + 2), 2)
 
     def _draw_grass(self, screen):
-        """绘制草地"""
+        """绘制草地 - 自然草丛效果"""
         rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, GRASS_COLOR, rect)
 
-        # 绘制草丛效果
+        # 草地底色
+        pygame.draw.rect(screen, (60, 140, 60), rect)
+
+        # 随机草丛（使用确定性伪随机，基于位置）
+        grass_positions = [
+            (self.x + 5, self.y + 5),
+            (self.x + 15, self.y + 8),
+            (self.x + 25, self.y + 3),
+            (self.x + 35, self.y + 10),
+            (self.x + 8, self.y + 20),
+            (self.x + 18, self.y + 25),
+            (self.x + 30, self.y + 18),
+            (self.x + 40, self.y + 22),
+            (self.x + 10, self.y + 35),
+            (self.x + 22, self.y + 38),
+            (self.x + 35, self.y + 32),
+        ]
+
+        for gx, gy in grass_positions:
+            # 草叶
+            grass_height = 8 + (hash(str(gx) + str(gy)) % 5)
+            pygame.draw.line(screen, (40, 120, 40),
+                           (gx, gy + grass_height),
+                           (gx - 2, gy), 2)
+            pygame.draw.line(screen, (50, 130, 50),
+                           (gx + 3, gy + grass_height),
+                           (gx + 3, gy), 2)
+            pygame.draw.line(screen, (45, 125, 45),
+                           (gx + 6, gy + grass_height),
+                           (gx + 8, gy), 2)
+
+        # 草地纹理
         for i in range(5):
-            grass_x = self.x + i * 10 + 2
-            pygame.draw.line(screen, (0, 100, 0),
-                           (grass_x, self.y + self.height),
-                           (grass_x - 3, self.y + self.height - 10), 2)
+            for j in range(5):
+                dot_x = self.x + i * 10 + 5
+                dot_y = self.y + j * 10 + 5
+                pygame.draw.circle(screen, (50, 130, 50), (dot_x, dot_y), 2)
 
     def _draw_base(self, screen):
-        """绘制基地"""
-        # 绘制城堡形状
+        """绘制基地 - 精致城堡"""
         center_x = self.x + self.width // 2
         center_y = self.y + self.height // 2
 
-        # 城堡主体
-        castle_rect = pygame.Rect(self.x + 8, self.y + 8, 32, 32)
-        pygame.draw.rect(screen, (150, 100, 50), castle_rect)
+        # 城堡主体（石材质感）
+        castle_rect = pygame.Rect(self.x + 8, self.y + 12, 32, 28)
+        pygame.draw.rect(screen, (139, 90, 60), castle_rect)
 
-        # 屋顶
+        # 石砖纹理
+        for row in range(3):
+            for col in range(4):
+                brick_x = self.x + 10 + col * 8
+                brick_y = self.y + 14 + row * 8
+                brick_rect = pygame.Rect(brick_x, brick_y, 7, 6)
+                pygame.draw.rect(screen, (120, 75, 50), brick_rect)
+
+        # 屋顶（红色瓦片）
         roof_points = [
-            (self.x + 4, self.y + 8),
-            (center_x, self.y - 4),
-            (self.x + self.width - 4, self.y + 8)
+            (self.x + 6, self.y + 12),
+            (center_x, self.y - 6),
+            (self.x + self.width - 6, self.y + 12)
         ]
-        pygame.draw.polygon(screen, (139, 69, 19), roof_points)
+        pygame.draw.polygon(screen, (150, 50, 40), roof_points)
 
-        # 旗帜
-        pygame.draw.line(screen, (255, 0, 0),
-                        (center_x, self.y - 4),
-                        (center_x, self.y - 20), 2)
+        # 屋顶高光
+        roof_highlight_points = [
+            (center_x, self.y - 6),
+            (center_x + 5, self.y + 2),
+            (center_x, self.y + 2),
+        ]
+        pygame.draw.polygon(screen, (180, 70, 60), roof_highlight_points)
+
+        # 入口
+        entrance_rect = pygame.Rect(center_x - 6, self.y + 28, 12, 12)
+        pygame.draw.rect(screen, (60, 40, 30), entrance_rect)
+        pygame.draw.arc(screen, (60, 40, 30),
+                       (center_x - 6, self.y + 22, 12, 12),
+                       3.14, 0, 3)
+
+        # 旗帜杆
+        pygame.draw.line(screen, (100, 80, 60),
+                        (center_x, self.y - 6),
+                        (center_x, self.y - 18), 2)
+
+        # 旗帜（飘动效果）
+        time_offset = pygame.time.get_ticks() / 300
+        wave = math.sin(time_offset) * 3
         flag_points = [
-            (center_x, self.y - 20),
-            (center_x + 12, self.y - 15),
+            (center_x, self.y - 18),
+            (center_x + 14 + wave, self.y - 14),
             (center_x, self.y - 10)
         ]
-        pygame.draw.polygon(screen, (255, 0, 0), flag_points)
+        pygame.draw.polygon(screen, (220, 40, 40), flag_points)
+        pygame.draw.polygon(screen, (255, 80, 80),
+                          [(center_x, self.y - 18), (center_x + 6 + wave, self.y - 15), (center_x, self.y - 12)])
 
         # 边框
-        pygame.draw.rect(screen, (100, 50, 20), castle_rect, 2)
+        pygame.draw.rect(screen, (80, 50, 30), castle_rect, 2)
 
     def get_rect(self):
         """获取碰撞矩形"""

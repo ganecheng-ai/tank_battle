@@ -46,38 +46,82 @@ class Tank(Entity):
         return (255, 255, 255)
 
     def create_surface(self):
-        """创建坦克表面"""
+        """创建坦克表面 - 精美绘制"""
         surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         surface.fill((0, 0, 0, 0))
 
-        # 绘制坦克主体
-        tank_rect = pygame.Rect(8, 8, 32, 32)
-        pygame.draw.rect(surface, self.color, tank_rect)
-        pygame.draw.rect(surface, (0, 0, 0), tank_rect, 2)
+        # 坦克主体颜色根据类型有所不同
+        base_color = self.color
+        highlight_color = tuple(min(255, c + 40) for c in base_color)
+        shadow_color = tuple(max(0, c - 40) for c in base_color)
 
-        # 绘制炮管
-        barrel_width = 8
-        barrel_length = 20
-        if self.direction == DIRECTION_UP:
-            barrel_rect = pygame.Rect(20, 0, barrel_width, barrel_length)
-        elif self.direction == DIRECTION_DOWN:
-            barrel_rect = pygame.Rect(20, 28, barrel_width, barrel_length)
-        elif self.direction == DIRECTION_LEFT:
-            barrel_rect = pygame.Rect(0, 20, barrel_length, barrel_width)
-        else:  # DIRECTION_RIGHT
-            barrel_rect = pygame.Rect(28, 20, barrel_length, barrel_width)
-        pygame.draw.rect(surface, self.color, barrel_rect)
-        pygame.draw.rect(surface, (0, 0, 0), barrel_rect, 2)
-
-        # 绘制履带
+        # 绘制履带（底层）
+        track_color = (50, 50, 50)
+        track_width = 10
         if self.direction in [DIRECTION_UP, DIRECTION_DOWN]:
-            left_track = pygame.Rect(2, 4, 6, 40)
-            right_track = pygame.Rect(40, 4, 6, 40)
+            # 左右履带
+            left_track = pygame.Rect(0, 2, track_width, self.height - 4)
+            right_track = pygame.Rect(self.width - track_width, 2, track_width, self.height - 4)
         else:
-            left_track = pygame.Rect(4, 2, 40, 6)
-            right_track = pygame.Rect(4, 40, 40, 6)
-        pygame.draw.rect(surface, (80, 80, 80), left_track)
-        pygame.draw.rect(surface, (80, 80, 80), right_track)
+            # 上下履带
+            left_track = pygame.Rect(2, 0, self.width - 4, track_width)
+            right_track = pygame.Rect(2, self.height - track_width, self.width - 4, track_width)
+
+        pygame.draw.rect(surface, track_color, left_track, border_radius=3)
+        pygame.draw.rect(surface, track_color, right_track, border_radius=3)
+
+        # 履带纹理
+        pygame.draw.rect(surface, (30, 30, 30), left_track, 2, border_radius=3)
+        pygame.draw.rect(surface, (30, 30, 30), right_track, 2, border_radius=3)
+
+        # 绘制坦克主体（中层）
+        body_rect = pygame.Rect(10, 10, self.width - 20, self.height - 20)
+        pygame.draw.rect(surface, base_color, body_rect, border_radius=5)
+        pygame.draw.rect(surface, shadow_color, body_rect, 3, border_radius=5)
+
+        # 主体高光
+        inner_rect = pygame.Rect(14, 14, self.width - 28, self.height - 28)
+        highlight_surface = pygame.Surface((inner_rect.width, inner_rect.height), pygame.SRCALPHA)
+        pygame.draw.rect(highlight_surface, (*highlight_color, 80), highlight_surface.get_rect(), border_radius=3)
+        surface.blit(highlight_surface, (inner_rect.x, inner_rect.y))
+
+        # 绘制炮塔（中心圆）
+        center_x, center_y = self.width // 2, self.height // 2
+        turret_radius = 12
+        pygame.draw.circle(surface, shadow_color, (center_x, center_y), turret_radius + 2)
+        pygame.draw.circle(surface, base_color, (center_x, center_y), turret_radius)
+        pygame.draw.circle(surface, highlight_color, (center_x - 2, center_y - 2), turret_radius - 4)
+
+        # 绘制炮管（根据方向）
+        barrel_width = 10
+        barrel_length = 22
+        if self.direction == DIRECTION_UP:
+            barrel_rect = pygame.Rect(center_x - barrel_width // 2, 0, barrel_width, barrel_length)
+        elif self.direction == DIRECTION_DOWN:
+            barrel_rect = pygame.Rect(center_x - barrel_width // 2, self.height - barrel_length, barrel_width, barrel_length)
+        elif self.direction == DIRECTION_LEFT:
+            barrel_rect = pygame.Rect(0, center_y - barrel_width // 2, barrel_length, barrel_width)
+        else:  # DIRECTION_RIGHT
+            barrel_rect = pygame.Rect(self.width - barrel_length, center_y - barrel_width // 2, barrel_length, barrel_width)
+
+        pygame.draw.rect(surface, shadow_color, barrel_rect, border_radius=3)
+        pygame.draw.rect(surface, base_color, pygame.Rect(barrel_rect.x + 1, barrel_rect.y + 1, barrel_rect.width - 2, barrel_rect.height - 2), border_radius=2)
+
+        # 履带细节 - 添加履带上的凸起
+        if self.direction in [DIRECTION_UP, DIRECTION_DOWN]:
+            for i in range(6):
+                y_pos = 4 + i * 6
+                pygame.draw.line(surface, (40, 40, 40), (2, y_pos), (8, y_pos), 2)
+                pygame.draw.line(surface, (40, 40, 40), (self.width - 8, y_pos), (self.width - 2, y_pos), 2)
+        else:
+            for i in range(6):
+                x_pos = 4 + i * 6
+                pygame.draw.line(surface, (40, 40, 40), (x_pos, 2), (x_pos, 8), 2)
+                pygame.draw.line(surface, (40, 40, 40), (x_pos, self.height - 8), (x_pos, self.height - 2), 2)
+
+        # 无敌状态效果
+        if self.invincible:
+            surface.set_alpha(200 + int(55 * pygame.time.get_ticks() / 100 % 2))
 
         return surface
 

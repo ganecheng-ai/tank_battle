@@ -18,16 +18,63 @@ class UI:
     def __init__(self):
         # 初始化字体
         pygame.font.init()
+        self.font_large = self._load_chinese_font(FONT_SIZE_LARGE)
+        self.font_medium = self._load_chinese_font(FONT_SIZE_MEDIUM)
+        self.font_small = self._load_chinese_font(FONT_SIZE_SMALL)
+
+        # 菜单选项
+        self.menu_options = ["开始游戏", "双人模式", "帮助", "退出"]
+        self.selected_option = 0
+
+    def _load_chinese_font(self, size):
+        """加载中文字体，尝试多种字体源"""
+        # 中文字体文件名列表（按优先级）
+        chinese_fonts = [
+            "simhei.ttf",           # 黑体 (Windows)
+            "msyh.ttc",             # 微软雅黑 (Windows)
+            "NotoSansCJK-Regular",  # Noto Sans CJK (Linux)
+            "SourceHanSansCN-Regular.otf",  # 思源黑体
+            "wqy-zenhei.ttc",       # 文泉驿正黑
+            "DroidSansFallbackFull.ttf",  # Android
+        ]
+
+        # 尝试系统字体路径
+        font_paths = [
+            "/usr/share/fonts/",
+            "/usr/share/fonts/truetype/",
+            "/usr/share/fonts/opentype/",
+            "/usr/share/fonts/noto/",
+            "/usr/share/fonts/noto-cjk/",
+            "/home/service/.local/share/fonts/",
+            "/opt/cloud/data/claude-code/tank_battle/assets/fonts/",
+        ]
+
+        # 首先尝试当前目录
+        for font_name in chinese_fonts:
+            try:
+                return pygame.font.Font(font_name, size)
+            except:
+                pass
+
+        # 尝试系统路径
+        for base_path in font_paths:
+            for font_name in chinese_fonts:
+                try:
+                    import os
+                    font_path = os.path.join(base_path, font_name)
+                    if os.path.exists(font_path):
+                        return pygame.font.Font(font_path, size)
+                except:
+                    pass
+
+        # 尝试使用系统字体
         try:
-            # 尝试使用中文字体
-            self.font_large = pygame.font.Font("simhei.ttf", FONT_SIZE_LARGE)
-            self.font_medium = pygame.font.Font("simhei.ttf", FONT_SIZE_MEDIUM)
-            self.font_small = pygame.font.Font("simhei.ttf", FONT_SIZE_SMALL)
+            return pygame.font.SysFont("notosanscjk", size)
         except:
-            #  fallback 到默认字体
-            self.font_large = pygame.font.Font(None, FONT_SIZE_LARGE + 8)
-            self.font_medium = pygame.font.Font(None, FONT_SIZE_MEDIUM + 8)
-            self.font_small = pygame.font.Font(None, FONT_SIZE_SMALL + 8)
+            pass
+
+        # Fallback 到默认字体
+        return pygame.font.Font(None, size + 8)
 
         self.menu_options = ["开始游戏", "双人模式", "帮助", "退出"]
         self.selected_option = 0
@@ -223,22 +270,47 @@ class UI:
 
 
 class Explosion:
-    """爆炸特效类"""
+    """爆炸特效类 - 精美粒子效果"""
 
     def __init__(self, x, y, size="medium"):
         self.x = x
         self.y = y
         self.frame = 0
-        self.max_frames = 20
+        self.max_frames = 25
 
         if size == "small":
-            self.max_radius = 20
+            self.max_radius = 25
+            self.particle_count = 8
         elif size == "large":
-            self.max_radius = 50
+            self.max_radius = 60
+            self.particle_count = 20
         else:
-            self.max_radius = 35
+            self.max_radius = 40
+            self.particle_count = 12
 
         self.active = True
+
+        # 生成粒子
+        import random
+        self.particles = []
+        for _ in range(self.particle_count):
+            angle = random.uniform(0, 2 * 3.14159)
+            speed = random.uniform(2, 6)
+            color = random.choice([
+                (255, 200, 0),    # 金黄色
+                (255, 100, 0),    # 橙色
+                (255, 50, 0),     # 红橙色
+                (200, 50, 0),     # 暗红色
+            ])
+            self.particles.append({
+                'x': 0,
+                'y': 0,
+                'vx': speed * pygame.math.Vector2(1, 0).rotate_rad(angle).x,
+                'vy': speed * pygame.math.Vector2(1, 0).rotate_rad(angle).y,
+                'size': random.randint(3, 8),
+                'color': color,
+                'life': random.randint(10, 20)
+            })
 
     def update(self):
         """更新爆炸帧"""
@@ -246,21 +318,61 @@ class Explosion:
         if self.frame >= self.max_frames:
             self.active = False
 
+        # 更新粒子
+        for particle in self.particles:
+            particle['x'] += particle['vx']
+            particle['y'] += particle['vy']
+            particle['vx'] *= 0.92  # 摩擦力
+            particle['vy'] *= 0.92
+            particle['life'] -= 1
+            particle['size'] = max(1, particle['size'] - 0.3)
+
     def draw(self, screen):
-        """绘制爆炸效果"""
+        """绘制爆炸效果 - 多层爆炸"""
         progress = self.frame / self.max_frames
 
-        # 爆炸半径先扩大后缩小
-        if progress < 0.5:
-            radius = int(self.max_radius * (progress * 2))
-        else:
-            radius = int(self.max_radius * (1 - (progress - 0.5) * 2))
+        # 第一层：核心爆炸（白 - 黄渐变）
+        if progress < 0.6:
+            core_radius = int(self.max_radius * 0.4 * (1 - progress * 0.5))
+            if core_radius > 0:
+                # 白色核心
+                pygame.draw.circle(screen, (255, 255, 255), (int(self.x), int(self.y)), core_radius)
+                # 黄色光晕
+                glow_radius = int(core_radius * 1.5)
+                glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(glow_surface, (255, 255, 0, 150), (glow_radius, glow_radius), glow_radius)
+                screen.blit(glow_surface, (int(self.x) - glow_radius, int(self.y) - glow_radius))
 
-        # 外层红色
-        pygame.draw.circle(screen, (255, 100, 0), (int(self.x), int(self.y)), radius)
-        # 内层黄色
-        inner_radius = int(radius * 0.6)
-        pygame.draw.circle(screen, (255, 255, 0), (int(self.x), int(self.y)), inner_radius)
-        # 中心白色
-        center_radius = int(radius * 0.3)
-        pygame.draw.circle(screen, (255, 255, 255), (int(self.x), int(self.y)), center_radius)
+        # 第二层：外层爆炸（橙 - 红渐变）
+        if progress < 0.8:
+            outer_radius = int(self.max_radius * (progress * 1.5))
+            if outer_radius > 0:
+                color_progress = progress / 0.8
+                r = 255
+                g = int(150 * (1 - color_progress))
+                b = 0
+                a = int(200 * (1 - progress))
+                outer_surface = pygame.Surface((outer_radius * 2, outer_radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(outer_surface, (r, g, b, a), (outer_radius, outer_radius), outer_radius)
+                screen.blit(outer_surface, (int(self.x) - outer_radius, int(self.y) - outer_radius))
+
+        # 第三层：冲击波效果
+        if progress < 0.4:
+            wave_radius = int(self.max_radius * 1.2 * progress * 2.5)
+            wave_width = max(1, int(5 * (1 - progress * 2.5)))
+            if wave_radius > 0:
+                wave_surface = pygame.Surface((wave_radius * 2, wave_radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(wave_surface, (255, 255, 255, int(150 * (1 - progress * 2.5))),
+                                 (wave_radius, wave_radius), wave_radius, wave_width)
+                screen.blit(wave_surface, (int(self.x) - wave_radius, int(self.y) - wave_radius))
+
+        # 第四层：粒子效果
+        for particle in self.particles:
+            if particle['life'] > 0:
+                alpha = int(255 * (particle['life'] / 20))
+                particle_surface = pygame.Surface((int(particle['size']) * 2, int(particle['size']) * 2), pygame.SRCALPHA)
+                pygame.draw.circle(particle_surface, (*particle['color'], alpha),
+                                 (int(particle['size']), int(particle['size'])), int(particle['size']))
+                screen.blit(particle_surface,
+                          (int(self.x + particle['x'] - particle['size']),
+                           int(self.y + particle['y'] - particle['size'])))
