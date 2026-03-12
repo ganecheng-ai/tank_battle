@@ -49,13 +49,19 @@ jobs:
 
       - name: Download Chinese font
         run: |
-          # 下载思源黑体用于 Windows 打包
-          $fontUrl = "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+          # 下载思源黑体用于 Windows 打包 (使用 CDN 镜像)
+          $fontUrl = "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf"
           $fontPath = "assets\fonts\SourceHanSansSC-Regular.otf"
           if (!(Test-Path "assets\fonts")) {
             New-Item -ItemType Directory -Force -Path "assets\fonts"
           }
-          Invoke-WebRequest -Uri $fontUrl -OutFile $fontPath
+          # 尝试下载字体，失败时不阻塞构建（UI 代码有 fallback 机制）
+          try {
+            Invoke-WebRequest -Uri $fontUrl -OutFile $fontPath -TimeoutSec 30
+            Write-Host "Font downloaded successfully"
+          } catch {
+            Write-Host "Font download failed, will use system fonts"
+          }
         shell: pwsh
 
       - name: Build executable with spec file
@@ -94,11 +100,12 @@ jobs:
 
       - name: Download Chinese font
         run: |
+          # 下载思源黑体 (使用 jsDelivr CDN)
           mkdir -p assets/fonts
-          wget -O assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf" || \
           curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf" \
+            --max-time 30 || \
+          echo "Font download failed, will use system fonts"
 
       - name: Build executable with spec file
         run: |
@@ -135,9 +142,12 @@ jobs:
 
       - name: Download Chinese font
         run: |
+          # 下载思源黑体 (使用 jsDelivr CDN)
           mkdir -p assets/fonts
           curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf" \
+            --max-time 30 || \
+          echo "Font download failed, will use system fonts"
 
       - name: Build executable with spec file
         run: |
