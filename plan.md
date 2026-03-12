@@ -213,11 +213,30 @@ tank-battle/
 
 | 文件 | 说明 |
 |------|------|
-| `/opt/cloud/data/claude-code/tank-battle/main.py` | 游戏入口 |
-| `/opt/cloud/data/claude-code/tank-battle/config.py` | 配置常量 |
-| `/opt/cloud/data/claude-code/tank-battle/src/game.py` | 游戏主逻辑 |
-| `/opt/cloud/data/claude-code/tank-battle/src/tank.py` | 坦克类 |
-| `/opt/cloud/data/claude-code/tank-battle/src/bullet.py` | 子弹类 |
-| `/opt/cloud/data/claude-code/tank-battle/src/collision.py` | 碰撞检测 |
-| `/opt/cloud/data/claude-code/tank-battle/src/level.py` | 关卡管理 |
+| `main.py` | 游戏入口 |
+| `config.py` | 配置常量 |
+| `src/game.py` | 游戏主逻辑 |
+| `src/tank.py` | 坦克类 |
+| `src/bullet.py` | 子弹类 |
+| `src/collision.py` | 碰撞检测 |
+| `src/level.py` | 关卡管理 |
+| `src/terrain.py` | 地形类 |
+| `src/entity.py` | 实体基类 |
+| `src/ui.py` | UI 渲染 |
+| `tests/test_game.py` | 单元测试 |
+
+---
+
+## 版本历史
+
+- **v1.1.0** - 添加 macOS 构建支持，优化游戏特效
+- **v1.0.0** - 初始发布版本，包含完整游戏功能
+
+---
+
+## 当前状态
+
+**项目状态**: 已完成 - 所有功能模块开发完成
+**最新测试**: 36 个单元测试全部通过
+**构建状态**: 支持 Windows/Linux/macOS 三平台自动构建
 
