@@ -76,9 +76,6 @@ class UI:
         # Fallback 到默认字体
         return pygame.font.Font(None, size + 8)
 
-        self.menu_options = ["开始游戏", "双人模式", "帮助", "退出"]
-        self.selected_option = 0
-
     def draw_menu(self, screen):
         """绘制主菜单"""
         # 背景

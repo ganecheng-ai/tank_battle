@@ -3,7 +3,7 @@
 管理游戏关卡和敌人波次生成
 """
 
-from config import TILE_SIZE, GRID_WIDTH, GRID_HEIGHT
+from config import TILE_SIZE, GRID_WIDTH, GRID_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 from src.terrain import (
     TerrainManager, Terrain,
     TERRAIN_EMPTY, TERRAIN_BRICK, TERRAIN_STEEL,
@@ -326,14 +326,3 @@ class LevelManager:
         if self.current_level < len(LEVEL_MAPS):
             return self.current_level + 1
         return None
-
-
-# 重新设置 spawn_points 使用正确的常量
-import sys
-if 'config' in sys.modules:
-    from config import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
-    LevelManager.spawn_points = [
-        (0, 0),  # 左上
-        (SCREEN_WIDTH // 2 - TILE_SIZE // 2, 0),  # 中上
-        (SCREEN_WIDTH - TILE_SIZE, 0),  # 右上
-    ]
