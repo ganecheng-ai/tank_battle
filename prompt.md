@@ -11,6 +11,7 @@
 - 使用迭代开发模式持续发布新版本
 - 检查GitHub Actions中最新workflow的报错并进行修复
 - 仓库的详细介绍持续更新到README.md文件
+- 代码质量高于一切, 稳定性、易用性、可用性、用户体验的改进高于新功能的添加
 
 # 版本发布要求
 在创建 Git Tag (例如 v*) 时自动通过GitHub Actions构建项目并发布 GitHub Release。
