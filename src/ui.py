@@ -28,52 +28,89 @@ class UI:
 
     def _load_chinese_font(self, size):
         """加载中文字体，尝试多种字体源"""
+        import os
+        import sys
+
         # 中文字体文件名列表（按优先级）
         chinese_fonts = [
             "simhei.ttf",           # 黑体 (Windows)
             "msyh.ttc",             # 微软雅黑 (Windows)
+            "msyh.ttf",             # 微软雅黑 (Windows)
             "NotoSansCJK-Regular",  # Noto Sans CJK (Linux)
+            "NotoSansSC-Regular",   # Noto Sans Simplified Chinese
             "SourceHanSansCN-Regular.otf",  # 思源黑体
             "wqy-zenhei.ttc",       # 文泉驿正黑
             "DroidSansFallbackFull.ttf",  # Android
         ]
 
+        # 获取 PyInstaller 临时目录（用于打包后的应用）
+        if getattr(sys, 'frozen', False):
+            # 打包后的应用
+            base_path = sys._MEIPASS
+            asset_font_path = os.path.join(base_path, 'assets', 'fonts')
+        else:
+            # 开发环境
+            base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            asset_font_path = os.path.join(base_path, 'assets', 'fonts')
+
         # 尝试系统字体路径
-        font_paths = [
+        system_font_paths = [
             "/usr/share/fonts/",
             "/usr/share/fonts/truetype/",
+            "/usr/share/fonts/truetype/noto/",
             "/usr/share/fonts/opentype/",
             "/usr/share/fonts/noto/",
             "/usr/share/fonts/noto-cjk/",
-            "/home/service/.local/share/fonts/",
-            "/opt/cloud/data/claude-code/tank_battle/assets/fonts/",
+            "/usr/local/share/fonts/",
+            os.path.expanduser("~/.local/share/fonts/"),
         ]
 
-        # 首先尝试当前目录
+        # 首先尝试 assets/fonts 目录
+        if os.path.exists(asset_font_path):
+            for font_name in chinese_fonts:
+                try:
+                    font_path = os.path.join(asset_font_path, font_name)
+                    if os.path.exists(font_path):
+                        return pygame.font.Font(font_path, size)
+                except Exception:
+                    pass
+
+        # 尝试当前目录
         for font_name in chinese_fonts:
             try:
-                return pygame.font.Font(font_name, size)
-            except:
+                if os.path.exists(font_name):
+                    return pygame.font.Font(font_name, size)
+            except Exception:
                 pass
 
         # 尝试系统路径
-        for base_path in font_paths:
+        for base_path in system_font_paths:
             for font_name in chinese_fonts:
                 try:
-                    import os
                     font_path = os.path.join(base_path, font_name)
                     if os.path.exists(font_path):
                         return pygame.font.Font(font_path, size)
-                except:
+                except Exception:
                     pass
 
         # 尝试使用系统字体
         try:
             return pygame.font.SysFont("notosanscjk", size)
-        except:
+        except Exception:
             pass
 
+        # 尝试其他中文字体名称
+        chinese_font_names = ["notosanscjk", "simhei", "msyh", "wqy-zenhei"]
+        for font_name in chinese_font_names:
+            try:
+                font = pygame.font.SysFont(font_name, size)
+                if font:
+                    return font
+            except Exception:
+                pass
+
         # Fallback 到默认字体
+        # 注意：默认字体不支持中文，但至少不会崩溃
         return pygame.font.Font(None, size + 8)
 
     def draw_menu(self, screen):

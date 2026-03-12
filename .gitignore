@@ -22,7 +22,8 @@ wheels/
 
 # PyInstaller
 *.manifest
-*.spec
+# Allow build.spec for PyInstaller configuration
+!build.spec
 
 # Virtual Environment
 venv/
