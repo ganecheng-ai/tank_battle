@@ -30,15 +30,17 @@ class UI:
         """加载中文字体，尝试多种字体源"""
         import os
         import sys
+        import glob
 
         # 中文字体文件名列表（按优先级）
         chinese_fonts = [
+            "SourceHanSansSC-Regular.otf",  # 思源黑体
+            "SourceHanSansCN-Regular.otf",  # 思源黑体（旧名）
             "simhei.ttf",           # 黑体 (Windows)
             "msyh.ttc",             # 微软雅黑 (Windows)
             "msyh.ttf",             # 微软雅黑 (Windows)
             "NotoSansCJK-Regular",  # Noto Sans CJK (Linux)
             "NotoSansSC-Regular",   # Noto Sans Simplified Chinese
-            "SourceHanSansCN-Regular.otf",  # 思源黑体
             "wqy-zenhei.ttc",       # 文泉驿正黑
             "DroidSansFallbackFull.ttf",  # Android
         ]
@@ -53,25 +55,17 @@ class UI:
             base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             asset_font_path = os.path.join(base_path, 'assets', 'fonts')
 
-        # 尝试系统字体路径
-        system_font_paths = [
-            "/usr/share/fonts/",
-            "/usr/share/fonts/truetype/",
-            "/usr/share/fonts/truetype/noto/",
-            "/usr/share/fonts/opentype/",
-            "/usr/share/fonts/noto/",
-            "/usr/share/fonts/noto-cjk/",
-            "/usr/local/share/fonts/",
-            os.path.expanduser("~/.local/share/fonts/"),
-        ]
-
         # 首先尝试 assets/fonts 目录
         if os.path.exists(asset_font_path):
             for font_name in chinese_fonts:
                 try:
                     font_path = os.path.join(asset_font_path, font_name)
                     if os.path.exists(font_path):
-                        return pygame.font.Font(font_path, size)
+                        font = pygame.font.Font(font_path, size)
+                        # 测试字体是否能渲染中文
+                        test_render = font.render("测试", True, (255, 255, 255))
+                        if test_render.get_width() > 10:  # 如果能渲染中文
+                            return font
                 except Exception:
                     pass
 
@@ -79,38 +73,95 @@ class UI:
         for font_name in chinese_fonts:
             try:
                 if os.path.exists(font_name):
-                    return pygame.font.Font(font_name, size)
+                    font = pygame.font.Font(font_name, size)
+                    test_render = font.render("测试", True, (255, 255, 255))
+                    if test_render.get_width() > 10:
+                        return font
             except Exception:
                 pass
 
-        # 尝试系统路径
-        for base_path in system_font_paths:
-            for font_name in chinese_fonts:
-                try:
-                    font_path = os.path.join(base_path, font_name)
-                    if os.path.exists(font_path):
-                        return pygame.font.Font(font_path, size)
-                except Exception:
-                    pass
+        # 尝试使用 pygame 内置的 SysFont 加载中文字体
+        # 按优先级尝试多种中文字体名称
+        chinese_font_names = [
+            "notosanscjk",          # Noto Sans CJK
+            "notosanscjkregular",   # Noto Sans CJK Regular
+            "notosanssc",           # Noto Sans Simplified Chinese
+            "wqy-zenhei",           # 文泉驿正黑
+            "wqy",                  # 文泉驿
+            "simhei",               # 黑体 (Windows)
+            "msyh",                 # 微软雅黑 (Windows)
+            "microsoftyahei",       # 微软雅黑
+            "simsun",               # 宋体
+            "simkai",               # 楷体
+            "stsong",               # 华文宋体
+            "stheiti",              # 黑体 (macOS)
+            "stfangsong",           # 仿宋
+        ]
 
-        # 尝试使用系统字体
-        try:
-            return pygame.font.SysFont("notosanscjk", size)
-        except Exception:
-            pass
-
-        # 尝试其他中文字体名称
-        chinese_font_names = ["notosanscjk", "simhei", "msyh", "wqy-zenhei"]
         for font_name in chinese_font_names:
             try:
                 font = pygame.font.SysFont(font_name, size)
                 if font:
-                    return font
+                    # 测试字体是否能渲染中文
+                    test_render = font.render("测试", True, (255, 255, 255))
+                    if test_render and test_render.get_width() > 10:
+                        return font
             except Exception:
                 pass
 
-        # Fallback 到默认字体
-        # 注意：默认字体不支持中文，但至少不会崩溃
+        # 尝试系统字体目录，使用 glob 模糊匹配
+        system_font_paths = [
+            "/usr/share/fonts/",
+            "/usr/share/fonts/truetype/",
+            "/usr/share/fonts/truetype/noto/",
+            "/usr/share/fonts/opentype/",
+            "/usr/share/fonts/noto/",
+            "/usr/share/fonts/noto-cjk/",
+            "/usr/share/fonts/truetype/wqy/",
+            "/usr/local/share/fonts/",
+            os.path.expanduser("~/.local/share/fonts/"),
+            "C:\\Windows\\Fonts\\",
+            "/System/Library/Fonts/",
+            "/Library/Fonts/",
+        ]
+
+        for base_path in system_font_paths:
+            if os.path.exists(base_path):
+                try:
+                    # 使用 glob 查找字体文件
+                    for pattern in ["**/*.ttf", "**/*.ttc", "**/*.otf"]:
+                        for font_path in glob.glob(os.path.join(base_path, pattern), recursive=True):
+                            font_name = os.path.basename(font_path).lower()
+                            # 检查是否包含中文字体关键词
+                            if any(keyword in font_name for keyword in [
+                                'noto', 'cjk', 'chinese', 'sim', 'heiti',
+                                'yahei', 'song', 'kai', 'fang', 'wqy', 'wenquanyi'
+                            ]):
+                                try:
+                                    font = pygame.font.Font(font_path, size)
+                                    test_render = font.render("测试", True, (255, 255, 255))
+                                    if test_render and test_render.get_width() > 10:
+                                        return font
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass
+
+        # 最后的 fallback：尝试使用默认系统字体
+        # 在某些系统上，默认 SysFont 可能会回退到中文字体
+        try:
+            font = pygame.font.SysFont(None, size + 8)
+            if font:
+                test_render = font.render("测试", True, (255, 255, 255))
+                if test_render and test_render.get_width() > 10:
+                    return font
+        except Exception:
+            pass
+
+        # 如果所有中文字体都无法加载，返回默认字体
+        # 注意：这会导致中文显示为方块，但至少游戏不会崩溃
+        print("Warning: No Chinese font found. Chinese text will not display correctly.")
+        print("Please install a Chinese font (e.g., Noto Sans CJK, Source Han Sans, WenQuanYi).")
         return pygame.font.Font(None, size + 8)
 
     def draw_menu(self, screen):
