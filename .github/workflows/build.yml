@@ -76,13 +76,13 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --name "TankBattle" --console main.py
+          pyinstaller --onefile --name "TankBattle-Linux" --console main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TankBattle-Linux-x86_64
-          path: dist/TankBattle
+          path: dist/TankBattle-Linux
 
   build-macos:
     needs: test
@@ -103,13 +103,13 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --name "TankBattle" --console main.py
+          pyinstaller --onefile --name "TankBattle-macOS" --console main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TankBattle-macOS-x86_64
-          path: dist/TankBattle
+          path: dist/TankBattle-macOS
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -137,12 +137,12 @@ jobs:
           path: ./release
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             ./release/TankBattle.exe
-            ./release/TankBattle-Linux-x86_64
-            ./release/TankBattle-macOS-x86_64
+            ./release/TankBattle-Linux
+            ./release/TankBattle-macOS
           generate_release_notes: true
           draft: false
           prerelease: false
