@@ -194,7 +194,7 @@ tank-battle/
 - [x] 添加特效
 - [x] 性能优化
 - [x] Bug 修复
-- [ ] 打包发布
+- [x] 打包发布（GitHub Actions 自动构建 Windows/Linux/macOS）
 
 ---
 
