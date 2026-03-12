@@ -26,3 +26,7 @@
    - **Linux**: `.tar.gz` (通用), `.deb` (Debian/Ubuntu), 或 `.AppImage`
    - **macOS**: `.dmg` (磁盘镜像) 或 `.tar.gz` (包含 .app)
    - **通用**: 请同时生成一个 `checksums.txt` 文件包含所有文件的 SHA256 哈希值。
+
+# 待修复问题清单
+以下issue如果还是opened状态, 需要在修复之后关闭, 及时发布新版本, 在issue里回复用户哪个版本可以验证是否修复成功. 不在下面清单中的issue可以忽略不用修复.
+- https://github.com/ganecheng-ai/tank_battle/issues/1
