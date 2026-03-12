@@ -21,7 +21,7 @@ class Entity:
         self.image = None
         self.rect = pygame.Rect(x, y, width, height)
 
-    def update(self, delta_time):
+    def update(self, delta_time=0):
         """更新实体状态"""
         pass
 
