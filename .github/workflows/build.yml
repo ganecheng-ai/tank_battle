@@ -49,18 +49,38 @@ jobs:
 
       - name: Download Chinese font
         run: |
-          # 下载思源黑体用于 Windows 打包 (使用 CDN 镜像)
-          $fontUrl = "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf"
+          # 下载思源黑体用于 Windows 打包 (使用多个源确保可靠性)
           $fontPath = "assets\fonts\SourceHanSansSC-Regular.otf"
           if (!(Test-Path "assets\fonts")) {
             New-Item -ItemType Directory -Force -Path "assets\fonts"
           }
-          # 尝试下载字体，失败时不阻塞构建（UI 代码有 fallback 机制）
-          try {
-            Invoke-WebRequest -Uri $fontUrl -OutFile $fontPath -TimeoutSec 30
-            Write-Host "Font downloaded successfully"
-          } catch {
-            Write-Host "Font download failed, will use system fonts"
+
+          # 备用源列表
+          $fontUrls = @(
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf",
+            "https://raw.githubusercontent.com/googlefonts/noto-cjk/main/SourceHanSansSC-Regular.otf",
+            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf",
+            "https://ghproxy.com/https://raw.githubusercontent.com/googlefonts/noto-cjk/main/SourceHanSansSC-Regular.otf"
+          )
+
+          $downloaded = $false
+          foreach ($url in $fontUrls) {
+            try {
+              Write-Host "Trying to download font from: $url"
+              Invoke-WebRequest -Uri $url -OutFile $fontPath -TimeoutSec 30
+              if (Test-Path $fontPath) {
+                Write-Host "Font downloaded successfully from: $url"
+                $downloaded = $true
+                break
+              }
+            } catch {
+              Write-Host "Failed to download from: $url"
+            }
+          }
+
+          if (-not $downloaded) {
+            Write-Host "Font download failed from all sources, will use system fonts"
+            Write-Host "The UI code has fallback mechanism to use system Chinese fonts"
           }
         shell: pwsh
 
@@ -100,12 +120,34 @@ jobs:
 
       - name: Download Chinese font
         run: |
-          # 下载思源黑体 (使用 jsDelivr CDN)
+          # 下载思源黑体 (使用多个源确保可靠性)
           mkdir -p assets/fonts
-          curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf" \
-            --max-time 30 || \
-          echo "Font download failed, will use system fonts"
+          FONT_PATH="assets/fonts/SourceHanSansSC-Regular.otf"
+
+          # 备用源列表
+          FONT_URLS=(
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://raw.githubusercontent.com/googlefonts/noto-cjk/main/SourceHanSansSC-Regular.otf"
+            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf"
+          )
+
+          downloaded=false
+          for url in "${FONT_URLS[@]}"; do
+            echo "Trying to download font from: $url"
+            if curl -L -o "$FONT_PATH" "$url" --max-time 30 --silent; then
+              if [ -f "$FONT_PATH" ] && [ -s "$FONT_PATH" ]; then
+                echo "Font downloaded successfully from: $url"
+                downloaded=true
+                break
+              fi
+            fi
+            echo "Failed to download from: $url"
+          done
+
+          if [ "$downloaded" = false ]; then
+            echo "Font download failed from all sources, will use system fonts"
+            echo "The UI code has fallback mechanism to use system Chinese fonts"
+          fi
 
       - name: Build executable with spec file
         run: |
@@ -142,12 +184,34 @@ jobs:
 
       - name: Download Chinese font
         run: |
-          # 下载思源黑体 (使用 jsDelivr CDN)
+          # 下载思源黑体 (使用多个源确保可靠性)
           mkdir -p assets/fonts
-          curl -L -o assets/fonts/SourceHanSansSC-Regular.otf \
-            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf" \
-            --max-time 30 || \
-          echo "Font download failed, will use system fonts"
+          FONT_PATH="assets/fonts/SourceHanSansSC-Regular.otf"
+
+          # 备用源列表
+          FONT_URLS=(
+            "https://github.com/googlefonts/noto-cjk/raw/main/SourceHanSansSC-Regular.otf"
+            "https://raw.githubusercontent.com/googlefonts/noto-cjk/main/SourceHanSansSC-Regular.otf"
+            "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/SourceHanSansSC-Regular.otf"
+          )
+
+          downloaded=false
+          for url in "${FONT_URLS[@]}"; do
+            echo "Trying to download font from: $url"
+            if curl -L -o "$FONT_PATH" "$url" --max-time 30 --silent; then
+              if [ -f "$FONT_PATH" ] && [ -s "$FONT_PATH" ]; then
+                echo "Font downloaded successfully from: $url"
+                downloaded=true
+                break
+              fi
+            fi
+            echo "Failed to download from: $url"
+          done
+
+          if [ "$downloaded" = false ]; then
+            echo "Font download failed from all sources, will use system fonts"
+            echo "The UI code has fallback mechanism to use system Chinese fonts"
+          fi
 
       - name: Build executable with spec file
         run: |

@@ -31,18 +31,30 @@ class UI:
         import os
         import sys
         import glob
+        import platform
 
         # 中文字体文件名列表（按优先级）
         chinese_fonts = [
             "SourceHanSansSC-Regular.otf",  # 思源黑体
             "SourceHanSansCN-Regular.otf",  # 思源黑体（旧名）
-            "simhei.ttf",           # 黑体 (Windows)
-            "msyh.ttc",             # 微软雅黑 (Windows)
-            "msyh.ttf",             # 微软雅黑 (Windows)
-            "NotoSansCJK-Regular",  # Noto Sans CJK (Linux)
-            "NotoSansSC-Regular",   # Noto Sans Simplified Chinese
-            "wqy-zenhei.ttc",       # 文泉驿正黑
-            "DroidSansFallbackFull.ttf",  # Android
+            "NotoSansSC-Regular.otf",       # Noto Sans Simplified Chinese
+            "NotoSansCJK-Regular.ttc",      # Noto Sans CJK
+            "NotoSansCJK-Regular.otf",      # Noto Sans CJK (otf)
+            "wqy-zenhei.ttc",               # 文泉驿正黑
+            "wqy-zenhei.ttf",               # 文泉驿正黑
+            "wqy-microhei.ttc",             # 文泉驿微米黑
+            "wqy-microhei.ttf",             # 文泉驿微米黑
+            "simhei.ttf",                   # 黑体 (Windows)
+            "simsun.ttc",                   # 宋体 (Windows)
+            "simsun.ttf",                   # 宋体 (Windows)
+            "msyh.ttc",                     # 微软雅黑 (Windows)
+            "msyh.ttf",                     # 微软雅黑 (Windows)
+            "msyhbd.ttc",                   # 微软雅黑粗体 (Windows)
+            "msyhbd.ttf",                   # 微软雅黑粗体 (Windows)
+            "DroidSansFallbackFull.ttf",    # Android
+            "STHeiti.ttf",                  # 华文黑体 (macOS)
+            "STSong.ttf",                   # 华文宋体 (macOS)
+            "PingFang.ttc",                 # 苹方 (macOS)
         ]
 
         # 获取 PyInstaller 临时目录（用于打包后的应用）
@@ -87,15 +99,17 @@ class UI:
             "notosanscjkregular",   # Noto Sans CJK Regular
             "notosanssc",           # Noto Sans Simplified Chinese
             "wqy-zenhei",           # 文泉驿正黑
+            "wqy-microhei",         # 文泉驿微米黑
             "wqy",                  # 文泉驿
             "simhei",               # 黑体 (Windows)
+            "simsun",               # 宋体 (Windows)
             "msyh",                 # 微软雅黑 (Windows)
             "microsoftyahei",       # 微软雅黑
-            "simsun",               # 宋体
             "simkai",               # 楷体
             "stsong",               # 华文宋体
-            "stheiti",              # 黑体 (macOS)
-            "stfangsong",           # 仿宋
+            "stheiti",              # 华文黑体 (macOS)
+            "stfangsong",           # 华文仿宋
+            "pingfang",             # 苹方 (macOS)
         ]
 
         for font_name in chinese_font_names:
@@ -110,22 +124,8 @@ class UI:
                 pass
 
         # 尝试系统字体目录，使用 glob 模糊匹配
-        system_font_paths = [
-            "/usr/share/fonts/",
-            "/usr/share/fonts/truetype/",
-            "/usr/share/fonts/truetype/noto/",
-            "/usr/share/fonts/opentype/",
-            "/usr/share/fonts/noto/",
-            "/usr/share/fonts/noto-cjk/",
-            "/usr/share/fonts/truetype/wqy/",
-            "/usr/local/share/fonts/",
-            os.path.expanduser("~/.local/share/fonts/"),
-            "C:\\Windows\\Fonts\\",
-            "/System/Library/Fonts/",
-            "/Library/Fonts/",
-        ]
-
-        for base_path in system_font_paths:
+        system_paths = self._get_system_font_paths()
+        for base_path in system_paths:
             if os.path.exists(base_path):
                 try:
                     # 使用 glob 查找字体文件
@@ -135,7 +135,8 @@ class UI:
                             # 检查是否包含中文字体关键词
                             if any(keyword in font_name for keyword in [
                                 'noto', 'cjk', 'chinese', 'sim', 'heiti',
-                                'yahei', 'song', 'kai', 'fang', 'wqy', 'wenquanyi'
+                                'yahei', 'song', 'kai', 'fang', 'wqy', 'wenquanyi',
+                                'sourcehan', 'pingfang'
                             ]):
                                 try:
                                     font = pygame.font.Font(font_path, size)
@@ -158,11 +159,75 @@ class UI:
         except Exception:
             pass
 
+        # 如果所有中文字体都无法加载，使用一个更可靠的备选方案
+        # 尝试直接使用 Unicode 字体名称
+        unicode_font_paths = [
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto-cjk/NotoSansCJK-Regular.otf",
+            "/usr/share/fonts/noto/NotoSansCJK-Regular.ttc",
+            "/System/Library/Fonts/PingFang.ttc",
+            "/System/Library/Fonts/STHeiti.ttf",
+        ]
+        for font_path in unicode_font_paths:
+            try:
+                if os.path.exists(font_path):
+                    font = pygame.font.Font(font_path, size)
+                    test_render = font.render("测试", True, (255, 255, 255))
+                    if test_render and test_render.get_width() > 10:
+                        return font
+            except Exception:
+                pass
+
         # 如果所有中文字体都无法加载，返回默认字体
         # 注意：这会导致中文显示为方块，但至少游戏不会崩溃
         print("Warning: No Chinese font found. Chinese text will not display correctly.")
         print("Please install a Chinese font (e.g., Noto Sans CJK, Source Han Sans, WenQuanYi).")
         return pygame.font.Font(None, size + 8)
+
+    def _get_system_font_paths(self):
+        """获取系统字体目录路径"""
+        import os
+        import platform
+
+        system_name = platform.system()
+        paths = []
+
+        if system_name == "Linux":
+            paths = [
+                "/usr/share/fonts/",
+                "/usr/share/fonts/truetype/",
+                "/usr/share/fonts/truetype/noto/",
+                "/usr/share/fonts/truetype/noto-cjk/",
+                "/usr/share/fonts/opentype/",
+                "/usr/share/fonts/opentype/noto-cjk/",
+                "/usr/share/fonts/noto/",
+                "/usr/share/fonts/noto-cjk/",
+                "/usr/share/fonts/truetype/wqy/",
+                "/usr/local/share/fonts/",
+                os.path.expanduser("~/.local/share/fonts/"),
+                os.path.expanduser("~/.fonts/"),
+            ]
+        elif system_name == "Windows":
+            paths = [
+                os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts"),
+                "C:\\Windows\\Fonts\\",
+            ]
+        elif system_name == "Darwin":  # macOS
+            paths = [
+                "/System/Library/Fonts/",
+                "/Library/Fonts/",
+                os.path.expanduser("~/Library/Fonts/"),
+            ]
+        else:
+            # 通用路径
+            paths = [
+                "/usr/share/fonts/",
+                "/usr/local/share/fonts/",
+                os.path.expanduser("~/.local/share/fonts/"),
+            ]
+
+        return paths
 
     def draw_menu(self, screen):
         """绘制主菜单"""
